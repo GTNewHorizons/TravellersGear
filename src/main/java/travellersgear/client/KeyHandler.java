@@ -9,6 +9,7 @@ import org.lwjgl.input.Keyboard;
 import travellersgear.TravellersGear;
 import travellersgear.client.handlers.ActiveAbilityHandler;
 import travellersgear.client.handlers.CustomizeableGuiHandler;
+import travellersgear.common.network.MessageActiveAbility;
 import travellersgear.common.network.MessageOpenGui;
 import travellersgear.common.network.MessageSlotSync;
 import cpw.mods.fml.client.FMLClientHandler;
@@ -16,6 +17,7 @@ import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.relauncher.Side;
+import travellersgear.common.network.old.PacketActiveAbility;
 
 public class KeyHandler
 {
@@ -54,8 +56,17 @@ public class KeyHandler
 			else if(keyDown[0])
 				keyDown[0] = false;
 
-			if(activeAbilitiesWheel!=null && activeAbilitiesWheel.getIsKeyPressed() && !keyDown[1] && ActiveAbilityHandler.instance.buildActiveAbilityList(player).length>0)
+			Object[][] gear = ActiveAbilityHandler.instance.buildActiveAbilityList(player);
+			if(activeAbilitiesWheel!=null && activeAbilitiesWheel.getIsKeyPressed() && !keyDown[1] && gear.length>0)
 			{
+				if(gear.length == 1) {
+					if(gear[0][0]!=null) {
+						TravellersGear.packetHandler.sendToServer(new MessageActiveAbility(player, (Integer) gear[0][1]));
+						PacketActiveAbility.performAbility(player, (Integer) gear[0][1]);
+						keyDown[1] = true;
+						return;
+					}
+				}
 				if(abilityLock)
 				{
 					abilityLock=false;
