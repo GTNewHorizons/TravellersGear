@@ -63,11 +63,13 @@ public class KeyHandler
 			else if(keyDown[0])
 				keyDown[0] = false;
 
-			Object[][] gear = ActiveAbilityHandler.instance.buildActiveAbilityList(player);
+			GearLazyContainer gear = new GearLazyContainer(player);
+
 			checkAbilityKey(activeAbility1, 0, gear, player);
 			checkAbilityKey(activeAbility2, 1, gear, player);
 			checkAbilityKey(activeAbility3, 2, gear, player);
-			if(activeAbilitiesWheel!=null && activeAbilitiesWheel.getIsKeyPressed() && !keyDown[1] && gear.length>0)
+
+			if(activeAbilitiesWheel!=null && activeAbilitiesWheel.getIsKeyPressed() && !keyDown[1] && gear.get().length>0)
 			{
 				if(abilityLock)
 				{
@@ -102,16 +104,32 @@ public class KeyHandler
 		}
 	}
 
-	private void checkAbilityKey(KeyBinding activeAbility, int i, Object[][] gear, EntityPlayer player) {
-		if(activeAbility != null && activeAbility.getIsKeyPressed() && !abilityKeyDown[i] && gear.length > i) {
-			if(gear[i][0]!=null) {
-				TravellersGear.packetHandler.sendToServer(new MessageActiveAbility(player, (Integer) gear[i][1]));
-				PacketActiveAbility.performAbility(player, (Integer) gear[i][1]);
+	private void checkAbilityKey(KeyBinding activeAbility, int i, GearLazyContainer gear, EntityPlayer player) {
+		if(activeAbility != null && activeAbility.getIsKeyPressed() && !abilityKeyDown[i] && gear.get().length > i) {
+			if(gear.get()[i][0]!=null) {
+				TravellersGear.packetHandler.sendToServer(new MessageActiveAbility(player, (Integer) gear.get()[i][1]));
+				PacketActiveAbility.performAbility(player, (Integer) gear.get()[i][1]);
 				abilityKeyDown[i] = true;
 			}
 		}
 		if(abilityKeyDown[i] && !activeAbility.getIsKeyPressed()) {
 			abilityKeyDown[i] = false;
+		}
+	}
+
+	private static class GearLazyContainer {
+		private Object[][] gear = null;
+		final EntityPlayer player;
+
+		private GearLazyContainer(EntityPlayer player) {
+			this.player = player;
+		}
+
+		private Object[][] get() {
+			if (gear == null) {
+				gear = ActiveAbilityHandler.instance.buildActiveAbilityList(player);
+			}
+			return gear;
 		}
 	}
 }
