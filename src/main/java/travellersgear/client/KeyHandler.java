@@ -23,7 +23,11 @@ public class KeyHandler
 {
 	public static KeyBinding openInventory = new KeyBinding("TG.keybind.openInv", 71, "key.categories.inventory");
 	public static KeyBinding activeAbilitiesWheel = new KeyBinding("TG.keybind.activeaAbilities", 19, "key.categories.inventory");
+	public static KeyBinding activeAbility1 = new KeyBinding("TG.keybind.activeaAbility1", Keyboard.KEY_NONE, "key.categories.inventory");
+	public static KeyBinding activeAbility2 = new KeyBinding("TG.keybind.activeaAbility2", Keyboard.KEY_NONE, "key.categories.inventory");
+	public static KeyBinding activeAbility3 = new KeyBinding("TG.keybind.activeaAbility3", Keyboard.KEY_NONE, "key.categories.inventory");
 	public boolean[] keyDown = {false,false};
+	public boolean[] abilityKeyDown = {false,false,false};
 	public static float abilityRadial;
 	public static boolean abilityLock = false;
 
@@ -31,6 +35,9 @@ public class KeyHandler
 	{
 		ClientRegistry.registerKeyBinding(openInventory);
 		ClientRegistry.registerKeyBinding(activeAbilitiesWheel);
+		ClientRegistry.registerKeyBinding(activeAbility1);
+		ClientRegistry.registerKeyBinding(activeAbility2);
+		ClientRegistry.registerKeyBinding(activeAbility3);
 	}
 
 	@SubscribeEvent
@@ -57,16 +64,11 @@ public class KeyHandler
 				keyDown[0] = false;
 
 			Object[][] gear = ActiveAbilityHandler.instance.buildActiveAbilityList(player);
+			checkAbilityKey(activeAbility1, 0, gear, player);
+			checkAbilityKey(activeAbility2, 1, gear, player);
+			checkAbilityKey(activeAbility3, 2, gear, player);
 			if(activeAbilitiesWheel!=null && activeAbilitiesWheel.getIsKeyPressed() && !keyDown[1] && gear.length>0)
 			{
-				if(gear.length == 1) {
-					if(gear[0][0]!=null) {
-						TravellersGear.packetHandler.sendToServer(new MessageActiveAbility(player, (Integer) gear[0][1]));
-						PacketActiveAbility.performAbility(player, (Integer) gear[0][1]);
-						keyDown[1] = true;
-						return;
-					}
-				}
 				if(abilityLock)
 				{
 					abilityLock=false;
@@ -97,6 +99,19 @@ public class KeyHandler
 						abilityRadial=0f;
 				}
 			}
+		}
+	}
+
+	private void checkAbilityKey(KeyBinding activeAbility, int i, Object[][] gear, EntityPlayer player) {
+		if(activeAbility != null && activeAbility.getIsKeyPressed() && !abilityKeyDown[i] && gear.length > i) {
+			if(gear[i][0]!=null) {
+				TravellersGear.packetHandler.sendToServer(new MessageActiveAbility(player, (Integer) gear[i][1]));
+				PacketActiveAbility.performAbility(player, (Integer) gear[i][1]);
+				abilityKeyDown[i] = true;
+			}
+		}
+		if(abilityKeyDown[i] && !activeAbility.getIsKeyPressed()) {
+			abilityKeyDown[i] = false;
 		}
 	}
 }
