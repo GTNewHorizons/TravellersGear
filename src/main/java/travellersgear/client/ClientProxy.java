@@ -36,6 +36,7 @@ import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.common.config.Property;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 
 import org.lwjgl.input.Mouse;
@@ -75,21 +76,36 @@ public class ClientProxy extends CommonProxy
 {
 	public static HashMap<String, ItemStack[]> equipmentMap = new HashMap<String, ItemStack[]>();
 	public static HashMap<String, ToolDisplayInfo[]> toolDisplayMap = new HashMap<String, ToolDisplayInfo[]>();
+	public static String[] keyBindings;
 	public static int[] equipmentButtonPos;
 	public static float activeAbilityGuiSpeed;
 	public static float titleOffset;
+	public static Configuration config;
 	@Override
 	public void preInit(FMLPreInitializationEvent event)
 	{
-		Configuration cfg = new Configuration(event.getSuggestedConfigurationFile());
-		cfg.load();
-		equipmentButtonPos = cfg.get("Options", "Button Position", new int[]{27,9}, "The position of the Equipment Button in the Inventory").getIntList();
-		activeAbilityGuiSpeed = cfg.getFloat("Radial Speed", "Options", .15f, .05f, 1f, "The speed at which the radial for active abilities opens. Default is 15% per tick, minimum is 5%, maximum is 100%");
-		titleOffset = (float)cfg.get("Options", "Title Offset", 0d, "Configures the vertical offset of the title above the players head. 0 is default, set to 1 to render above the players name, the other offsets will use that scale.").getDouble();
-		cfg.save();
+		config = new Configuration(event.getSuggestedConfigurationFile());
+		config.load();
+		equipmentButtonPos = config.get("Options", "Button Position", new int[]{27,9}, "The position of the Equipment Button in the Inventory").getIntList();
+		activeAbilityGuiSpeed = config.getFloat("Radial Speed", "Options", .15f, .05f, 1f, "The speed at which the radial for active abilities opens. Default is 15% per tick, minimum is 5%, maximum is 100%");
+		titleOffset = (float)config.get("Options", "Title Offset", 0d, "Configures the vertical offset of the title above the players head. 0 is default, set to 1 to render above the players name, the other offsets will use that scale.").getDouble();
+		Property prop = config.get("Local", "Key Bindings", new String[] {"one", "two", "three"}, "Hotkey binding for active abilities");
+		if (prop.getStringList().length < 3) {
+			prop.setToDefault();
+		}
+		keyBindings = prop.getStringList();
+		config.save();
 
 		CustomizeableGuiHandler.instance.preInit(event);
 	}
+
+	public static void bindKey(int num, String item) {
+		if (num >= 0 && num < 3) {
+			keyBindings[num] = item;
+			config.save();
+		}
+	}
+
 	@SubscribeEvent
 	public void loadTextures(TextureStitchEvent event)
 	{

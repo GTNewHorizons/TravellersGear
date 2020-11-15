@@ -4,6 +4,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import org.lwjgl.input.Keyboard;
 
 import travellersgear.TravellersGear;
@@ -105,11 +107,14 @@ public class KeyHandler
 	}
 
 	private void checkAbilityKey(KeyBinding activeAbility, int i, GearLazyContainer gear, EntityPlayer player) {
-		if(activeAbility != null && activeAbility.getIsKeyPressed() && !abilityKeyDown[i] && gear.get().length > i) {
-			if(gear.get()[i][0]!=null) {
-				TravellersGear.packetHandler.sendToServer(new MessageActiveAbility(player, (Integer) gear.get()[i][1]));
-				PacketActiveAbility.performAbility(player, (Integer) gear.get()[i][1]);
-				abilityKeyDown[i] = true;
+		if(activeAbility != null && activeAbility.getIsKeyPressed() && !abilityKeyDown[i] && gear.get().length > 0) {
+			for (Object[] ability : gear.get()) {
+				ItemStack stack = (ItemStack) ability[0];
+				if (stack != null && ClientProxy.keyBindings[i].equals(Item.itemRegistry.getNameForObject(stack.getItem()))) {
+					TravellersGear.packetHandler.sendToServer(new MessageActiveAbility(player, (Integer) ability[1]));
+					PacketActiveAbility.performAbility(player, (Integer) ability[1]);
+					abilityKeyDown[i] = true;
+				}
 			}
 		}
 		if(abilityKeyDown[i] && !activeAbility.getIsKeyPressed()) {
