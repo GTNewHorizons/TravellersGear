@@ -68,6 +68,9 @@ itemGroup.travellersgear=Traveller's Gear
 
 TG.keybind.openInv=Traveller's Gear Inventory
 TG.keybind.activeaAbilities=Traveller's Gear Active Abilities
+TG.keybind.activeaAbility1=Active Ability 1
+TG.keybind.activeaAbility2=Active Ability 2
+TG.keybind.activeaAbility3=Active Ability 3
 
 #-- Title --
 TG.personaltitle.treepuncher=Professional Treepuncher

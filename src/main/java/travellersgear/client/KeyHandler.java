@@ -4,11 +4,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import org.lwjgl.input.Keyboard;
 
 import travellersgear.TravellersGear;
 import travellersgear.client.handlers.ActiveAbilityHandler;
 import travellersgear.client.handlers.CustomizeableGuiHandler;
+import travellersgear.common.network.MessageActiveAbility;
 import travellersgear.common.network.MessageOpenGui;
 import travellersgear.common.network.MessageSlotSync;
 import cpw.mods.fml.client.FMLClientHandler;
@@ -16,12 +19,17 @@ import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.relauncher.Side;
+import travellersgear.common.network.old.PacketActiveAbility;
 
 public class KeyHandler
 {
 	public static KeyBinding openInventory = new KeyBinding("TG.keybind.openInv", 71, "key.categories.inventory");
 	public static KeyBinding activeAbilitiesWheel = new KeyBinding("TG.keybind.activeaAbilities", 19, "key.categories.inventory");
+	public static KeyBinding activeAbility1 = new KeyBinding("TG.keybind.activeaAbility1", Keyboard.KEY_NONE, "key.categories.inventory");
+	public static KeyBinding activeAbility2 = new KeyBinding("TG.keybind.activeaAbility2", Keyboard.KEY_NONE, "key.categories.inventory");
+	public static KeyBinding activeAbility3 = new KeyBinding("TG.keybind.activeaAbility3", Keyboard.KEY_NONE, "key.categories.inventory");
 	public boolean[] keyDown = {false,false};
+	public boolean[] abilityKeyDown = {false,false,false};
 	public static float abilityRadial;
 	public static boolean abilityLock = false;
 
@@ -29,6 +37,9 @@ public class KeyHandler
 	{
 		ClientRegistry.registerKeyBinding(openInventory);
 		ClientRegistry.registerKeyBinding(activeAbilitiesWheel);
+		ClientRegistry.registerKeyBinding(activeAbility1);
+		ClientRegistry.registerKeyBinding(activeAbility2);
+		ClientRegistry.registerKeyBinding(activeAbility3);
 	}
 
 	@SubscribeEvent
@@ -54,7 +65,13 @@ public class KeyHandler
 			else if(keyDown[0])
 				keyDown[0] = false;
 
-			if(activeAbilitiesWheel!=null && activeAbilitiesWheel.getIsKeyPressed() && !keyDown[1] && ActiveAbilityHandler.instance.buildActiveAbilityList(player).length>0)
+			GearLazyContainer gear = new GearLazyContainer(player);
+
+			checkAbilityKey(activeAbility1, 0, gear, player);
+			checkAbilityKey(activeAbility2, 1, gear, player);
+			checkAbilityKey(activeAbility3, 2, gear, player);
+
+			if(activeAbilitiesWheel!=null && activeAbilitiesWheel.getIsKeyPressed() && !keyDown[1] && gear.get().length>0)
 			{
 				if(abilityLock)
 				{
@@ -86,6 +103,38 @@ public class KeyHandler
 						abilityRadial=0f;
 				}
 			}
+		}
+	}
+
+	private void checkAbilityKey(KeyBinding activeAbility, int i, GearLazyContainer gear, EntityPlayer player) {
+		if(activeAbility != null && activeAbility.getIsKeyPressed() && !abilityKeyDown[i] && gear.get().length > 0) {
+			for (Object[] ability : gear.get()) {
+				ItemStack stack = (ItemStack) ability[0];
+				if (stack != null && ClientProxy.keyBindings[i].equals(Item.itemRegistry.getNameForObject(stack.getItem()))) {
+					TravellersGear.packetHandler.sendToServer(new MessageActiveAbility(player, (Integer) ability[1]));
+					PacketActiveAbility.performAbility(player, (Integer) ability[1]);
+					abilityKeyDown[i] = true;
+				}
+			}
+		}
+		if(abilityKeyDown[i] && !activeAbility.getIsKeyPressed()) {
+			abilityKeyDown[i] = false;
+		}
+	}
+
+	private static class GearLazyContainer {
+		private Object[][] gear = null;
+		final EntityPlayer player;
+
+		private GearLazyContainer(EntityPlayer player) {
+			this.player = player;
+		}
+
+		private Object[][] get() {
+			if (gear == null) {
+				gear = ActiveAbilityHandler.instance.buildActiveAbilityList(player);
+			}
+			return gear;
 		}
 	}
 }

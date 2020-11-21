@@ -68,6 +68,9 @@ itemGroup.travellersgear=Traveller's Gear
 
 TG.keybind.openInv=Инвентарь дорожных пренадлежностей
 TG.keybind.activeaAbilities=Активные способности дорожных принадлежностей
+TG.keybind.activeaAbility1=Активная способность 1
+TG.keybind.activeaAbility2=Активная способность 2
+TG.keybind.activeaAbility3=Активная способность 3
 
 #-- Title --
 TG.personaltitle.treepuncher=Специалист по избиванию деревьев
